@@ -15,4 +15,11 @@ for ping in range(1,255):
     else:
         print "ping to", address, "failed!"
 
+#   find all differences in the 2 lists
+
+listOrigin = ["192.168.123#192.168.13"]
+listActual = ["192.168.123#192.168.13#192.168.1.13"]
+
+result = set(listOrigin).symmetric_difference(listOrigin)
+
 #
