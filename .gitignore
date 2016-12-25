@@ -4,9 +4,11 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff:
+.idea/misc.xml
+.idea/modules.xml
 .idea/workspace.xml
 .idea/tasks.xml
-.idea
+.idea/oecluster.iml
 
 # Sensitive or high-churn files:
 .idea/dataSources/
