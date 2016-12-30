@@ -10,8 +10,10 @@ class Server:
         self.address = address
         self.port = port
         self.Clients = dict()
+
         # Create a TCP/IP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         # Bind the socket to the port
         self.server_address = (self.address, self.port)
 
@@ -19,6 +21,7 @@ class Server:
         #print('starting up on {} port {}'.format(self.address, str(self.port)))
         print >>sys.stderr, 'starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address)
+
         # Listen for incoming connections
         self.sock.listen(5)
         thread = threading.Thread(target=self.accept, args=())
@@ -32,8 +35,8 @@ class Server:
             print('waiting for a connection')
             connection, client_address = self.sock.accept()
             self.Clients[client_address] = connection
-            print('new connection registered! Client address : {}', format(client_address))
-            #print >>sys.stderr, 'new connection registered! Client address : %s' % client_address
+            #print('new connection registered! Client address : {}', format(client_address))
+            print >>sys.stderr, 'new connection registered! Client address : %s' % client_address
 
             try:
                 print('connection from', client_address)
@@ -53,3 +56,9 @@ class Server:
                     print >>sys.stderr, 'finally'
                     # Clean up the connection
                     # connection.close()
+
+    def shutdown(self):
+        for client in self.Clients:
+            client.close()
+        #self.sock.shutdown(socket.SHUT_RDWR)
+        self.sock.close()

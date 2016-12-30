@@ -2,6 +2,7 @@ import socket
 import sys
 
 
+
 # The Server class for TCP/IP communication
 class Client:
 
@@ -14,7 +15,7 @@ class Client:
         self.port = port
         self.server = (server_address, port)
         #print('connecting to {} port {}'.format(self.server_address, str(self.port)))
-        print >>sys.stderr, 'starting up on %s port %s' % self.server
+        print >>sys.stderr, 'connecting to %s on port %s' % self.server
 
     def connect(self):
         self.sock.connect(self.server)
