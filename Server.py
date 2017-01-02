@@ -19,7 +19,8 @@ class Server:
 
     def start(self):
         #print('starting up on {} port {}'.format(self.address, str(self.port)))
-        print >>sys.stderr, 'starting up on %s port %s' % self.server_address
+        #print >>sys.stderr, 'starting up on %s port %s' % self.server_address
+        sys.stderr.write('starting up on %s port %s' % self.server_address + '\n')
         self.sock.bind(self.server_address)
 
         # Listen for incoming connections
@@ -36,7 +37,8 @@ class Server:
             connection, client_address = self.sock.accept()
             self.Clients[client_address] = connection
             #print('new connection registered! Client address : {}', format(client_address))
-            print >>sys.stderr, 'new connection registered! Client address : %s' % client_address
+            #print >>sys.stderr, 'new connection registered! Client address : %s' % client_address
+            sys.stderr.write('new connection registered! Client address : ' + str(client_address) + '\n')
 
             try:
                 print('connection from', client_address)
@@ -44,21 +46,25 @@ class Server:
                 # Receive the data in small chunks and retransmit it
                 while True:
                     data = connection.recv(16)
-                    print >>sys.stderr, 'received "%s"' % data
+                    #print >>sys.stderr, 'received "%s"' % data
+                    sys.stderr.write('received "%s"' % data + '\n')
                     if data:
-                        print >>sys.stderr, 'sending data back to the client'
+                        #print >>sys.stderr, 'sending data back to the client'
+                        sys.stderr.write('sending data back to the client\n')
                         connection.sendall(data)
                     else:
-                        print >>sys.stderr, 'no more data from', client_address
+                        #print >>sys.stderr, 'no more data from', client_address
+                        sys.stderr.write('no more data from'+ str(client_address) + '\n')
                         break
 
             finally:
-                    print >>sys.stderr, 'finally'
+                    #print >>sys.stderr, 'finally'
+                    sys.stderr.write('finally\n')
                     # Clean up the connection
                     # connection.close()
 
     def shutdown(self):
-        for client in self.Clients:
-            client.close()
+        #for client in self.Clients:
+            #client.close()
         #self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()

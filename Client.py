@@ -15,16 +15,18 @@ class Client:
         self.port = port
         self.server = (server_address, port)
         #print('connecting to {} port {}'.format(self.server_address, str(self.port)))
-        print >>sys.stderr, 'connecting to %s on port %s' % self.server
+        #print >>sys.stderr, 'connecting to %s on port %s' % self.server
+        sys.stderr.write('connecting to %s on port %s' % self.server + '\n')
 
     def connect(self):
         self.sock.connect(self.server)
         try:
 
             # Send data
-            message = 'This is the message.  It will be repeated.'
+            message = b'This is the message.  It will be repeated.'
             #print('sending "{}"'.format(message))
-            print >>sys.stderr, 'sending "%s"' % message
+            #print >>sys.stderr, 'sending "%s"' % message
+            sys.stderr.write('sending "%s"' % message + '\n')
             self.sock.sendall(message)
 
             # Look for the response
@@ -35,7 +37,8 @@ class Client:
                 data = self.sock.recv(16)
                 amount_received += len(data)
                 #print('received "{}"'.format(data))
-                print >>sys.stderr, 'received "%s"' % data
+                #print >>sys.stderr, 'received "%s"' % data
+                sys.stderr.write('received "%s"' % data + '\n')
 
         finally:
             print('closing socket')
