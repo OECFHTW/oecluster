@@ -1,7 +1,7 @@
 #Author Susanne&Stephan&Roman
 #new comment added
 
-
+'''
 # template for pinging IP range
 import subprocess
 
@@ -23,3 +23,8 @@ listActual = ["192.168.123#192.168.13#192.168.1.13"]
 result = set(listOrigin).symmetric_difference(listOrigin)
 
 #
+'''
+
+class TopologyChange:
+
+
