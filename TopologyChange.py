@@ -25,6 +25,24 @@ result = set(listOrigin).symmetric_difference(listOrigin)
 #
 '''
 
+import MasterElection
+import ClusterList
+
 class TopologyChange:
+
+
+
+    def compareList(newMemberlist, oldMemberlist):
+        #TODO: Compare two Lists
+        actualList = new Clusterlist
+
+        MasterElection.selectMaster(actualList)
+
+        return(actualList)
+
+
+
+
+
 
 
