@@ -34,7 +34,7 @@ class TopologyChange:
 
     def __init__(self, clist, srv, cln):
         print("Init TopologyChange")
-        self.clientList = clist
+        self.clusterList = clist
         self.server = srv
         self.client = cln
 
