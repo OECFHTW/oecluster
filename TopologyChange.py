@@ -32,7 +32,11 @@ import Server
 
 class TopologyChange:
 
-    def __init__(self, clusterlist, server, client):
+    def __init__(self, clist, srv, cln):
+        print("Init TopologyChange")
+        self.clientList = clist
+        self.server = srv
+        self.client = cln
 
     def compareList(newMemberlist, oldMemberlist):
         #TODO: Compare two Lists
