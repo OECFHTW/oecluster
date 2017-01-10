@@ -27,18 +27,25 @@ result = set(listOrigin).symmetric_difference(listOrigin)
 
 import MasterElection
 import ClusterList
+import Client
+import Server
 
 class TopologyChange:
 
-
+    def __init__(self, clusterlist, server, client):
 
     def compareList(newMemberlist, oldMemberlist):
         #TODO: Compare two Lists
-        actualList = new Clusterlist
+        #actualList = Clusterlist.
 
-        MasterElection.selectMaster(actualList)
+        listOrigin = ["192.168.123#192.168.13"]
+        listActual = ["192.168.123#192.168.13#192.168.1.13"]
 
-        return(actualList)
+        result = set(listOrigin).symmetric_difference(listOrigin)
+
+        MasterElection.getMaster(result)
+
+        return()
 
 
 
