@@ -29,8 +29,9 @@ import MasterElection
 import ClusterList
 import Client
 import Server
+import threading
 
-class TopologyChange:
+class TopologyChange():
 
     def __init__(self, clist, srv, cln):
         print("Init TopologyChange")
@@ -51,9 +52,15 @@ class TopologyChange:
 
         return()
 
+    def scan(self):
+        threading.Timer(2.0, self.scan).start()
+        print("Scanning the Network...")
 
+        #TODO Scanning the Network
 
+srv = Server
+cln = Client
+clist = ClusterList
 
-
-
-
+x = TopologyChange(srv, cln, clist)
+x.scan()

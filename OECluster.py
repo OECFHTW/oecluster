@@ -3,6 +3,7 @@ import Client
 import ClusterList
 import netifaces as ni
 import configparser as cp
+import TopologyChange
 
 #python 3 needed
 
@@ -21,7 +22,7 @@ def ConfigSectionMap(section):
 
 print("Starting application")
 
-print("Available Interfaces: "+str(ni.interfaces()))
+#print("Available Interfaces: "+str(ni.interfaces()))
 print("Reading config")
 Config = cp.ConfigParser()
 Config.read("./OECluster.cfg")
@@ -52,6 +53,9 @@ cli3.connect()
 print(myip)
 
 input('Enter your input:')
+
+TopologyChange.scan()
+
 server.shutdown()
 
 
