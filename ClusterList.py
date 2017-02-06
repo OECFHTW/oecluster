@@ -7,7 +7,7 @@ class ClusterList:
         print("Init ClusterList")
         self.m_master = ""
         self.m_cluster_members = []
-        self.masterElector=MasterElection.MasterElection()
+        self.masterElector = MasterElection.MasterElection()
 
     def getMaster(self):
         return self.m_master

@@ -3,7 +3,9 @@ import Client
 import ClusterList
 import netifaces as ni
 import configparser as cp
-import TopologyChange
+#import TopologyChange
+import NetworkMapper
+
 
 #python 3 needed
 
@@ -22,8 +24,9 @@ def ConfigSectionMap(section):
 
 print("Starting application")
 
-#print("Available Interfaces: "+str(ni.interfaces()))
+print("Available Interfaces: "+str(ni.interfaces()))
 print("Reading config")
+
 Config = cp.ConfigParser()
 Config.read("./OECluster.cfg")
 #print(Config.sections())
@@ -34,28 +37,60 @@ Port = int(ConfigSectionMap("Service")['port'])
 print("Init with Interface "+ Interface + " & Port "+ str(Port))
 #ni.ifaddresses()#('eth0')
 myip = ni.ifaddresses(Interface)[2][0]['addr']
-print("IP "+ myip)
+#print("IP "+ myip)
 
-clusterlist = ClusterList.ClusterList()
-clusterlist.addMember(myip)
+nm = NetworkMapper.NetworkMapper()
 
-server = Server.Server(myip, Port)
-server.start()
+hosts_list = nm.get_host_list
 
-cli1 = Client.Client(myip, Port)
-cli2 = Client.Client(myip, Port)
-cli3 = Client.Client(myip, Port)
+for host in hosts_list:
+    print(host)
 
-cli1.connect()
-cli2.connect()
-cli3.connect()
 
-print(myip)
+
+
+
+
+
+    #print(alias)
+    #print(ipaddr)
+#
+#
+#
+# print(hostnames)
+# print(aliaslist)
+# print(ipaddrlist)
+
+
+
+# import nmap
+# nm = nmap.PortScanner()
+# nm.scan(hosts='192.168.0.0/24', arguments='-n -sP -PE -PA21,23,80,3389')
+# hosts_list = [(x, nm[x]['status']['state']) for x in nm.all_hosts()]
+# for host, status in hosts_list:
+#     print('{0}:{1}'.format(host, status))
+
+
+#clusterlist = ClusterList.ClusterList()
+#clusterlist.addMember(myip)
+
+#server = Server.Server(myip, Port)
+#server.start()
+
+#cli1 = Client.Client(myip, Port)
+#cli2 = Client.Client(myip, Port)
+#cli3 = Client.Client(myip, Port)
+
+#cli1.connect()
+#cli2.connect()
+#cli3.connect()
+
+#print(myip)
 
 input('Enter your input:')
 
-TopologyChange.scan()
+#TopologyChange.scan()
 
-server.shutdown()
+#server.shutdown()
 
 
