@@ -5,7 +5,7 @@ import netifaces as ni
 import configparser as cp
 #import TopologyChange
 import NetworkMapper
-
+import ConfigReader
 
 #python 3 needed
 
@@ -39,7 +39,15 @@ print("Init with Interface "+ Interface + " & Port "+ str(Port))
 myip = ni.ifaddresses(Interface)[2][0]['addr']
 #print("IP "+ myip)
 
-nm = NetworkMapper.NetworkMapper()
+config_reader = ConfigReader.ConfigReader()
+members = config_reader.get_config_section("Cluster")['members'].replace(" ", "").split(',')
+
+nm = None
+
+if members[0] != "":
+    nm = NetworkMapper.NetworkMapper(members)
+else:
+    nm = NetworkMapper.NetworkMapper()
 
 hosts_list = nm.get_host_list
 
