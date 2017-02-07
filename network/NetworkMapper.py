@@ -11,7 +11,7 @@ __version__ = "1.0"
 
 logger = logging.getLogger("networkmapper")
 logger.setLevel(logging.DEBUG)
-FORMAT = '[%(asctime)-15s][%(levelname)s][%(module)s][%(funcName)s] %(message)s'
+FORMAT = '[%(asctime)-15s][%(name)s][%(levelname)s][%(module)s][%(funcName)s] %(message)s'
 logging.basicConfig(format=FORMAT)
 
 
