@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 # Author: Dennis Strasser mailto:dennis.f.strasser@gmail.com
 
+import ipaddress
+import socket
+import logging
+import ConfigReader
+from network import Host
+
 __version__ = "1.0"
 
-import socket
-import ipaddress
-import Host
-import ConfigReader
+logger = logging.getLogger("networkmapper")
+logger.setLevel(logging.DEBUG)
+FORMAT = '[%(asctime)-15s][%(levelname)s][%(module)s][%(funcName)s] %(message)s'
+logging.basicConfig(format=FORMAT)
 
 
 class NetworkMapper(object):
@@ -15,36 +21,34 @@ class NetworkMapper(object):
      the cell phone number and the email address.
     """
 
-    def __init__(self, ip_list = []):
-        """Initializes class
-        :param ip_list: list of IP-addresses. If passed, network will not be scanned.
+    def __init__(self):
+        """Initializes class NetworkMapper.
+            If a list of member IPs is found in the config, these are used.
+            Otherwise the network will be scanned.
         """
-        self.config_reader = ConfigReader.ConfigReader()
+        self._config_reader = ConfigReader.ConfigReader()
+        ip_list = self._config_reader.get_config_section("Cluster")['members'].replace(" ", "").split(',')
 
-        if len(ip_list) == 0:
+        if ip_list[0] == "":
             self._host_list = self.scan_network()
         else:
             self._host_list = self.fill_host_list(ip_list)
 
     def scan_network(self):
-        network = self.config_reader.get_config_section("Networking")['network']
-        netmask = self.config_reader.get_config_section("Networking")['netmask']
+        logger.info('scanning Network')
+        network = self._config_reader.get_config_section("Networking")['network']
+        netmask = self._config_reader.get_config_section("Networking")['netmask']
         my_net = ipaddress.ip_network(network+'/'+netmask)
-
-
-        addr_range = "192.168.0.%d"
-        host_list = []
-
-        # Use UDP.
+        host_list = dict()
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(2.0)
 
         for ip in my_net:
             try:
                 # print(ip)
-                host = self.generate_host(ip)
+                host = self._generate_host(ip)
                 if host is not None:
-                    host_list.append(host)
+                    host_list[ip] = host
             except socket.herror as ex:
                 pass
         return host_list
@@ -58,7 +62,7 @@ class NetworkMapper(object):
 
         for ip in ip_list:
             try:
-                host = self.generate_host(ip)
+                host = self._generate_host(ip)
                 if host is not None:
                     host_list.append(host)
             except socket.herror as ex:
@@ -66,7 +70,7 @@ class NetworkMapper(object):
 
         return host_list
 
-    def generate_host(self, ip):
+    def _generate_host(self, ip):
         host = None
 
         # Use UDP.
@@ -81,12 +85,21 @@ class NetworkMapper(object):
 
         return host
 
-    @property
-    def get_host_list(self):
+    # Properties
+
+    def _get_host_list(self):
         """This property returns a list of Hosts in the current network(-segment)
-        :return: device_list
+        :return: _host_list
         """
         return self._host_list
+
+    def _set_host_list(self):
+        """This property set the list of Hosts in the current network(-segment)
+        :return: device_list
+        """
+        pass
+
+    host_list = property(_get_host_list, _set_host_list, doc='Get/set the list of eligible hosts')
 
     if __name__ == "__main__":
         print("This class should not be called directly.")

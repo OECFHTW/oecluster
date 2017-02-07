@@ -3,7 +3,7 @@
 
 __version__ = "1.0"
 
-import Host
+from network import Host
 
 
 class ClusterMember(Host):
@@ -19,3 +19,6 @@ class ClusterMember(Host):
         :param host_name: The host name of the network device
         """
         Host._init__(self, ip_address, host_name)
+
+    if __name__ == "__main__":
+        print("This class should not be called directly.")

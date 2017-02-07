@@ -25,11 +25,11 @@ result = set(listOrigin).symmetric_difference(listOrigin)
 #
 '''
 
-import MasterElection
-import ClusterList
-import Client
-import Server
 import threading
+
+from network import Client, Server
+from removed import ClusterList, MasterElection
+
 
 class TopologyChange():
 

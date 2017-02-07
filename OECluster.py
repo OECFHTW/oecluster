@@ -1,104 +1,56 @@
-import Server
-import Client
-import ClusterList
-import netifaces as ni
+#!/usr/bin/env python3
+# Author: Dennis Strasser mailto:dennis.f.strasser@gmail.com
+
 import configparser as cp
-#import TopologyChange
-import NetworkMapper
+import netifaces as ni
 import ConfigReader
+import logging
+from network import NetworkMapper
 
-#python 3 needed
+__version__ = "1.0"
 
-def ConfigSectionMap(section):
-    dict1 = {}
-    options = Config.options(section)
-    for option in options:
-        try:
-            dict1[option] = Config.get(section, option)
-            if dict1[option] == -1:
-                print("skip: %s" % option)
-        except:
-            print("exception on %s!" % option)
-            dict1[option] = None
-    return dict1
-
-print("Starting application")
-
-print("Available Interfaces: "+str(ni.interfaces()))
-print("Reading config")
-
-Config = cp.ConfigParser()
-Config.read("./OECluster.cfg")
-#print(Config.sections())
-
-Interface = ConfigSectionMap("Networking")['interface']
-Port = int(ConfigSectionMap("Service")['port'])
-
-print("Init with Interface "+ Interface + " & Port "+ str(Port))
-#ni.ifaddresses()#('eth0')
-myip = ni.ifaddresses(Interface)[2][0]['addr']
-#print("IP "+ myip)
-
-config_reader = ConfigReader.ConfigReader()
-members = config_reader.get_config_section("Cluster")['members'].replace(" ", "").split(',')
-
-nm = None
-
-if members[0] != "":
-    nm = NetworkMapper.NetworkMapper(members)
-else:
-    nm = NetworkMapper.NetworkMapper()
-
-hosts_list = nm.get_host_list
-
-for host in hosts_list:
-    print(host)
+logger = logging.getLogger("oecluster")
+logger.setLevel(logging.DEBUG)
+FORMAT = '[%(asctime)-15s][%(levelname)s][%(module)s][%(funcName)s] %(message)s'
+logging.basicConfig(format=FORMAT)
 
 
+class OECluster:
+    def __init__(self):
+        logger.debug("starting cluster.")
+        logger.debug("reading config.")
+        self._config_reader = ConfigReader.ConfigReader()
 
 
+        self._config_reader = ConfigReader.ConfigReader()
+        self._network_mapper = NetworkMapper.NetworkMapper()
+        self._host_list = self._network_mapper.host_list
 
+    # Properties
 
+    def _get_host_list(self):
+        """This property returns a list of Hosts in the current network(-segment)
+        :return: _host_list
+        """
+        return self._host_list
 
-    #print(alias)
-    #print(ipaddr)
-#
-#
-#
-# print(hostnames)
-# print(aliaslist)
-# print(ipaddrlist)
+    def _set_host_list(self):
+        """This property set the list of Hosts in the current network(-segment)
+        :return: device_list
+        """
+        pass
 
+    host_list = property(_get_host_list, _set_host_list, doc='Get/set the list of eligible hosts')
 
+if __name__ == "__main__":
+    cluster = OECluster()
+    hosts_list = cluster.host_list
+    logger.info('eligible hosts')
 
-# import nmap
-# nm = nmap.PortScanner()
-# nm.scan(hosts='192.168.0.0/24', arguments='-n -sP -PE -PA21,23,80,3389')
-# hosts_list = [(x, nm[x]['status']['state']) for x in nm.all_hosts()]
-# for host, status in hosts_list:
-#     print('{0}:{1}'.format(host, status))
+    for ip, host in hosts_list.items():
+        logger.info(host)
 
+    input('Enter your input:')
 
-#clusterlist = ClusterList.ClusterList()
-#clusterlist.addMember(myip)
-
-#server = Server.Server(myip, Port)
-#server.start()
-
-#cli1 = Client.Client(myip, Port)
-#cli2 = Client.Client(myip, Port)
-#cli3 = Client.Client(myip, Port)
-
-#cli1.connect()
-#cli2.connect()
-#cli3.connect()
-
-#print(myip)
-
-input('Enter your input:')
-
-#TopologyChange.scan()
-
-#server.shutdown()
 
 

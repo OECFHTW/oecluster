@@ -1,5 +1,5 @@
+from removed import MasterElection
 
-import MasterElection
 
 class ClusterList:
 

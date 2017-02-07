@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # Author: Dennis Strasser mailto:dennis.f.strasser@gmail.com
 
-__version__ = "1.0"
-
 import configparser as cp
+
+__version__ = "1.0"
 
 
 class ConfigReader(object):
@@ -13,13 +13,14 @@ class ConfigReader(object):
      the cell phone number and the email address.
     """
 
-    def __init__(self, config_file = "./OECluster.cfg"):
+    def __init__(self, config_file="./OECluster.cfg"):
         """Initializes and declares class attributes from the given parameters
         :param config_file: The config file to be parsed by ConfigReader
         """
         self._config_file = config_file
         self._config_parser = cp.ConfigParser()
         self._config_parser.read(config_file)
+
 
     def get_config_section(self, section):
         dict1 = {}
