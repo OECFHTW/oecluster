@@ -70,7 +70,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     AsyncServer.cluster = cluster
     # Each client connection will create a new protocol instance
-    coro = loop.create_server(AsyncServer.ClusterServerClientProtocol, '127.0.0.1', 26541)
+    coro = loop.create_server(AsyncServer.ClusterServerClientProtocol, '', 26541)
     server = loop.run_until_complete(coro)
 
     # Serve requests until Ctrl+C is pressed

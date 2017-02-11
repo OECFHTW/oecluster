@@ -23,10 +23,25 @@ class AsyncClient(object):
 
     @asyncio.coroutine
     def connect(self):
-        self._co_routine = self._loop.create_connection(
-            lambda: EchoClientProtocol(self._message, self._loop), self._target, self._port
-        )
-        asyncio.async(self._co_routine)
+        try:
+            logger.debug("Trying to  connect to %s" % self._target)
+            yield from self._loop.create_connection(
+                lambda: EchoClientProtocol(self._message, self._loop), self._target, self._port
+            )
+
+
+            # self._co_routine = self._loop.create_connection(
+            #     lambda: EchoClientProtocol(self._message, self._loop), self._target, self._port
+            # )
+            # asyncio.async(self._co_routine)
+        except ConnectionRefusedError:
+            # print('caught')
+            logger.info("Connection refused by %s. Likely not running cluster service." % self._target)
+        except TimeoutError:
+            logger.error('Timeout error on Host: %s' % self._target)
+
+        except:
+            logger.error('Caught some other error. Host: %s' % self._target)
 
 
 class EchoClientProtocol(asyncio.Protocol):
