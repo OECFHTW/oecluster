@@ -27,8 +27,7 @@ result = set(listOrigin).symmetric_difference(listOrigin)
 
 import threading
 
-from network import Client, Server
-from removed import ClusterList, MasterElection
+from removed import ClusterList, MasterElection, Server, Client
 
 
 class TopologyChange():

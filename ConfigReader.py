@@ -21,7 +21,6 @@ class ConfigReader(object):
         self._config_parser = cp.ConfigParser()
         self._config_parser.read(config_file)
 
-
     def get_config_section(self, section):
         dict1 = {}
         options = self._config_parser.options(section)

@@ -11,7 +11,7 @@ __version__ = "1.0"
 
 logger = logging.getLogger("networkmapper")
 logger.setLevel(logging.DEBUG)
-FORMAT = '[%(asctime)-15s][%(name)s][%(levelname)s][%(module)s][%(funcName)s] %(message)s'
+FORMAT = '[%(asctime)-15s][%(levelname)s][%(name)s][%(module)s][%(funcName)s] %(message)s'
 logging.basicConfig(format=FORMAT)
 
 
@@ -73,8 +73,8 @@ class NetworkMapper(object):
     def _generate_host(self, ip):
         host = None
 
-        # Use UDP.
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Use UDP. socket.SOCK_DGRAM
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(2.0)
 
         try:

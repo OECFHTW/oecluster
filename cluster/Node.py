@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # Author: Dennis Strasser mailto:dennis.f.strasser@gmail.com
 
-__version__ = "1.0"
-
 from network import Host
 
+__version__ = "1.0"
 
-class ClusterMember(Host):
+
+class Node(Host):
     """This class holds information on devices in the network
 
     This class holds information about people and their contact information: first- and last name,
