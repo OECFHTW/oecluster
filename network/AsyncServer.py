@@ -58,22 +58,22 @@ class AsyncServer(object):
 
 
 class ClusterServerClientProtocol(asyncio.Protocol):
-    def __init__(self):   # , newClientCallback, dataReceivedCallback):
+    def __init__(self):
         self._peer_name = None
         self._transport = None
 
     def connection_made(self, transport):
         self._peer_name = transport.get_extra_info('peername')
         self._transport = transport
-        cluster.add_member(self._peer_name)
+        cluster.add_member(self._peer_name, self, True)
         logger.debug('Connection from {}'.format(self._peer_name))
 
     def data_received(self, data):
         message = data.decode()
-        logger.debug('Data received: {!r}'.format(message))
-        logger.debug('Send: {!r}'.format(message))
+        logger.debug('Data received from {}: {!r}'.format(self._peer_name, message))
+        logger.debug('Send to {}: {!r}'.format(self._peer_name, message))
         self._transport.write(data)
-        logger.debug('Close the client socket')
+        # logger.debug('Close the client socket')
 
     def connection_lost(self, error):
         if error:
@@ -81,6 +81,9 @@ class ClusterServerClientProtocol(asyncio.Protocol):
         else:
             logger.debug('closing')
         super().connection_lost(error)
+
+    def send(self, message):
+        self._transport.write(message.encode())
 
     # Properties
     def _get_peer_name(self):
@@ -91,7 +94,6 @@ class ClusterServerClientProtocol(asyncio.Protocol):
 
     def _set_peer_name(self):
         """This property sets the peer name
-        :return: device_list
         """
         pass
 

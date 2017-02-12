@@ -2,10 +2,11 @@
 # Author: Dennis Strasser mailto:dennis.f.strasser@gmail.com
 
 import ipaddress
-import socket
 import logging
+import socket
+
 import ConfigReader
-from network import Host
+from cluster import Node
 
 __version__ = "1.0"
 
@@ -54,7 +55,7 @@ class NetworkMapper(object):
         return host_list
 
     def fill_host_list(self, ip_list):
-        host_list = []
+        host_list = dict()
 
         # Use UDP.
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -62,9 +63,10 @@ class NetworkMapper(object):
 
         for ip in ip_list:
             try:
+                ip = ipaddress.ip_address(ip)
                 host = self._generate_host(ip)
                 if host is not None:
-                    host_list.append(host)
+                    host_list[ip] = host
             except socket.herror as ex:
                 pass
 
@@ -79,7 +81,7 @@ class NetworkMapper(object):
 
         try:
             host_name, alias, ipaddr = socket.gethostbyaddr(str(ip))
-            host = Host.Host(ip, host_name)
+            host = Node.Node(ip, host_name)
         except socket.herror as ex:
             pass
 
@@ -88,13 +90,13 @@ class NetworkMapper(object):
     # Properties
 
     def _get_host_list(self):
-        """This property returns a list of Hosts in the current network(-segment)
+        """This property returns a list of Nodes in the current network(-segment)
         :return: _host_list
         """
         return self._host_list
 
     def _set_host_list(self):
-        """This property set the list of Hosts in the current network(-segment)
+        """This property set the list of Nodes in the current network(-segment)
         :return: device_list
         """
         pass

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # Author: Dennis Strasser mailto:dennis.f.strasser@gmail.com
 
+import asyncio
+import ipaddress
 import logging
-
+import socket
 import ConfigReader
+from cluster import MasterElector
 from network import NetworkMapper
 from network import AsyncServer
 from network import AsyncClient
-import asyncio
 
 __version__ = "1.0"
 
@@ -17,14 +19,62 @@ FORMAT = '[%(asctime)-15s][%(levelname)s][%(module)s][%(funcName)s] %(message)s'
 logging.basicConfig(format=FORMAT)
 
 
-class OECluster:
-    def __init__(self) -> object:
+class OECluster(object):
+    def __init__(self):
         logger.debug("starting cluster.")
         logger.debug("reading config.")
         self._config_reader = ConfigReader.ConfigReader()
         self._network_mapper = NetworkMapper.NetworkMapper()
+        self._master_elector = MasterElector.MasterElector()
         self._host_list = self._network_mapper.host_list
-        self._member_list = []
+        self._member_list = {}
+        self._continuous_scan = bool(self._config_reader.get_config_section("Cluster")['continuously_scan'])
+        self._scan_interval = int(self._config_reader.get_config_section("Cluster")['scan_interval'])
+        self.loop = asyncio.get_event_loop()
+
+    def add_member(self, client_address, connection, is_client=False):
+        node_ip = ipaddress.ip_address(client_address[0])
+
+        if is_client:
+            self._host_list[node_ip].client_connection = connection
+            logger.debug("new Connection from %s port %d" % (client_address[0], client_address[1]))
+            logger.debug("Connecting to %s" % str(node_ip))
+            client_connection = AsyncClient.AsyncClient(str(ip))
+            if self._host_list[node_ip].server_connection is None:
+                asyncio.async(client_connection.connect())
+        else:
+            self._host_list[node_ip].server_connection = connection
+            logger.debug("Connected to %s" % str(node_ip))
+        self._member_list[node_ip] = self._host_list[node_ip]
+        self._master_elector.elect_master(self._member_list)
+        # TODO add if master changed
+
+    def receive_data(self, peer_name, message):
+        logger.debug("received %s from %s" % (message, peer_name))
+
+    def remove_member(self, client_address):
+        try:
+            del self._member_list[client_address]
+        finally:
+            return
+
+    def contiuously_scan_network(self):
+        while True:
+            asyncio.sleep(self._scan_interval)
+            old_host_list = self._host_list.copy()
+            self._host_list = self._network_mapper.scan_network()
+            # TODO fertig machen
+
+    def get_own_ip(self):
+        return ([l for l in (
+            [ip_addr for ip_addr in socket.gethostbyname_ex(socket.gethostname())[2] if not ip_addr.startswith("127.")][:1],
+            [
+                [
+                    (s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in
+                    [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
+                    ][0][1]]
+        ) if l][0][0])
+        # TODO bereinigen, das muss besser gehen
 
     # Properties
 
@@ -42,23 +92,11 @@ class OECluster:
 
     host_list = property(_get_host_list, _set_host_list, doc='Get/set the list of eligible hosts')
 
-    def add_member(self, client_address):
-        self._member_list.append(client_address[0])
-        # self._member_list[client_address] = connection
-        logger.debug("new Connection from %s port %d" % (client_address[0], client_address[1]))
-
-    def receive_data(self, peer_name, message):
-        logger.debug("received %s from %s" % (message, peer_name))
-
-    def remove_member(self, client_address):
-        try:
-            del self._member_list[client_address]
-        finally:
-            return
-
 
 if __name__ == "__main__":
     cluster = OECluster()
+
+    # TODO checken, ob das nicht besser in eine MAIN-Methode des Cluster soll?!
 
     logger.info('eligible hosts')
 
@@ -67,7 +105,7 @@ if __name__ == "__main__":
 
     input('Enter your input:')
 
-    loop = asyncio.get_event_loop()
+    loop = cluster.loop
     AsyncServer.cluster = cluster
     # Each client connection will create a new protocol instance
     coro = loop.create_server(AsyncServer.ClusterServerClientProtocol, '', 26541)
