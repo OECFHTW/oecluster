@@ -31,6 +31,8 @@ class OECluster(object):
         self._continuous_scan = bool(self._config_reader.get_config_section("Cluster")['continuously_scan'])
         self._scan_interval = int(self._config_reader.get_config_section("Cluster")['scan_interval'])
         self.loop = asyncio.get_event_loop()
+        self._master_counter = 0
+        self._is_master = False
 
     def add_member(self, client_address, connection, is_client=False):
         node_ip = ipaddress.ip_address(client_address[0])
@@ -41,7 +43,11 @@ class OECluster(object):
             logger.debug("Connecting to %s" % str(node_ip))
             client_connection = AsyncClient.AsyncClient(str(ip))
             if self._host_list[node_ip].server_connection is None:
-                asyncio.async(client_connection.connect())
+                conn_coroutine = self.loop.create_task(client_connection.connect())
+                self._host_list[node_ip].server_connection = asyncio.gather(client_connection.connect())
+                # loop.call_soon(asyncio.async, client_connection.connect())
+                # self._host_list[node_ip].server_connection = asyncio.async(client_connection.connect())
+                # self._host_list[node_ip].server_connection = client_connection.connect()
         else:
             self._host_list[node_ip].server_connection = connection
             logger.debug("Connected to %s" % str(node_ip))
@@ -49,8 +55,25 @@ class OECluster(object):
         self._master_elector.elect_master(self._member_list)
         # TODO add if master changed
 
-    def receive_data(self, peer_name, message):
+    def receive_data(self, peer_name, message, is_client=False):
+        message = message.decode()
         logger.debug("received %s from %s" % (message, peer_name))
+        if is_client:
+            if message == 'UPVOTE':
+                self._increase_master_counter()
+        else:
+            if message == 'ACKNOWLEDGE':
+                logger.info("%s accepted master election" % peer_name)
+
+    def _increase_master_counter(self):
+        self._master_counter += 1
+        if self._master_counter == len(self._member_list):
+            self._is_master = True
+            logger.info("This Node has been elected as master")
+            for key, member in self._member_list.items():
+                member.send("ACKNOWLEDGE")
+
+
 
     def remove_member(self, client_address):
         try:

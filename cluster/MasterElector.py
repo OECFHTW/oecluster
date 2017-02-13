@@ -2,6 +2,7 @@
 # Author: Dennis Strasser mailto:dennis.f.strasser@gmail.com
 
 import logging
+import asyncio
 
 __version__ = "1.0"
 
@@ -16,10 +17,21 @@ class MasterElector(object):
         self._master = None
 
     def elect_master(self, node_dictionary):
+        old_master = self._master
         self._master = min(list(node_dictionary.keys()))
-        logger.debug("Elected new master: %s", str(self._master))
-        # TODO add if master changed
+
+        if self._master != old_master:
+            # yield from
+            # asyncio.async(self._inform_new_master(node_dictionary))
+            self._inform_new_master(node_dictionary)
+
         return self._master
+
+    # @asyncio.coroutine
+    def _inform_new_master(self, node_dictionary):
+        # yield from
+        node_dictionary[self._master].send('UPVOTE')
+        logger.debug("Elected new master: %s", str(self._master))
 
 
 

@@ -1,6 +1,7 @@
 import asyncio
 import ConfigReader
 import logging
+import sys
 
 logger = logging.getLogger("asyncclient")
 logger.setLevel(logging.DEBUG)
@@ -25,19 +26,21 @@ class AsyncClient(object):
     def connect(self):
         try:
             logger.debug("Trying to  connect to %s" % self._target)
-            yield from self._loop.create_connection(
-                lambda: EchoClientProtocol(self._message, self._loop), self._target, self._port
-            )
+            #yield from
+            yield from asyncio.async(self._loop.create_connection(
+                lambda: ClusterClientProtocol(self._message, self._loop), self._target, self._port
+            ))
 
         except ConnectionRefusedError:
             logger.info("Connection refused by %s. Likely not running cluster service." % self._target)
         except TimeoutError:
             logger.error('Timeout error on Host: %s' % self._target)
-        except:
-            logger.error('Caught some other error. Host: %s' % self._target)
+        except Exception as e:
+            #e = sys.exc_info()  # [0]
+            logger.error('Caught some other error:{} Host: {}'.format(e, self._target))
 
 
-class EchoClientProtocol(asyncio.Protocol):
+class ClusterClientProtocol(asyncio.Protocol):
     def __init__(self, message, loop):
         self._message = message
         self._loop = loop

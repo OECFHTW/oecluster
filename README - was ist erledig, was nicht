@@ -1,0 +1,13 @@
+Dear Cluster initialisiert, scannt das Netzwerk und versucht sich mit den eligible Hosts zu Verbinden.
+
+Der Server und der Client sind in einer Event-Loop in asyncio implementiert.
+Die Master-Election passiert auf Basis der niedrigsten IP-Adresse und informiert den gewählten Master darüber, dass er gewählt wurde.
+Der Master warte bis er Bestätigung von allen anderen Cluster-Mitgliedern erhalten hat, bis er die Rolle übernimmt.
+
+Bei der Kommunikation zum Master kommt es noch zu einem Fehler, da die Eventloop mit der Herstellung der Verbindung zum Master überholt wird.
+
+Der Topology change ist insofern implmentiert, dass neu authentifizierte Client auch als Server-Verbindung hinzukommen.
+Jeder Change führt zu einer erneuten Master-Election welche nur eine Kommunikation verursacht, wenn sich der Master ändert.
+
+Beste Grüße,
+Dennis Strasser

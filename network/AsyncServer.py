@@ -71,6 +71,7 @@ class ClusterServerClientProtocol(asyncio.Protocol):
     def data_received(self, data):
         message = data.decode()
         logger.debug('Data received from {}: {!r}'.format(self._peer_name, message))
+        cluster.receive_data(self._peer_name, data, True)
         logger.debug('Send to {}: {!r}'.format(self._peer_name, message))
         self._transport.write(data)
         # logger.debug('Close the client socket')
