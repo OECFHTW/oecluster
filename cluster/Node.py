@@ -30,8 +30,6 @@ class Node(object):
         self._server_connection = None
 
     def send(self, message):
-        self._server_connection = yield from self._server_connection
-
         logger.debug("sending message to {} : {}".format(self._server_connection._peer_name[0], message))
         self._server_connection.send(message)
 

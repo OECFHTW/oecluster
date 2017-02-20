@@ -5,6 +5,7 @@ import asyncio
 import ipaddress
 import logging
 import socket
+import time
 import ConfigReader
 from cluster import MasterElector
 from network import NetworkMapper
@@ -25,11 +26,13 @@ class OECluster(object):
         logger.debug("reading config.")
         self._config_reader = ConfigReader.ConfigReader()
         self._network_mapper = NetworkMapper.NetworkMapper()
+        MasterElector.cluster = self
         self._master_elector = MasterElector.MasterElector()
         self._host_list = self._network_mapper.host_list
         self._member_list = {}
         self._continuous_scan = bool(self._config_reader.get_config_section("Cluster")['continuously_scan'])
         self._scan_interval = int(self._config_reader.get_config_section("Cluster")['scan_interval'])
+        self._port = int(self._config_reader.get_config_section("Service")['port'])
         self.loop = asyncio.get_event_loop()
         self._master_counter = 0
         self._is_master = False
@@ -41,25 +44,20 @@ class OECluster(object):
             self._host_list[node_ip].client_connection = connection
             logger.debug("new Connection from %s port %d" % (client_address[0], client_address[1]))
             logger.debug("Connecting to %s" % str(node_ip))
-            client_connection = AsyncClient.AsyncClient(str(ip))
-            if self._host_list[node_ip].server_connection is None:
-                conn_coroutine = self.loop.create_task(client_connection.connect())
-                self._host_list[node_ip].server_connection = asyncio.gather(client_connection.connect())
-                # loop.call_soon(asyncio.async, client_connection.connect())
-                # self._host_list[node_ip].server_connection = asyncio.async(client_connection.connect())
-                # self._host_list[node_ip].server_connection = client_connection.connect()
+
         else:
             self._host_list[node_ip].server_connection = connection
             logger.debug("Connected to %s" % str(node_ip))
+
         self._member_list[node_ip] = self._host_list[node_ip]
-        self._master_elector.elect_master(self._member_list)
+        # self._master_elector.elect_master(self._member_list)
         # TODO add if master changed
 
     def receive_data(self, peer_name, message, is_client=False):
         message = message.decode()
         logger.debug("received %s from %s" % (message, peer_name))
         if is_client:
-            if message == 'UPVOTE':
+            if message == 'JOINUPVOTE':
                 self._increase_master_counter()
         else:
             if message == 'ACKNOWLEDGE':
@@ -73,20 +71,53 @@ class OECluster(object):
             for key, member in self._member_list.items():
                 member.send("ACKNOWLEDGE")
 
-
-
     def remove_member(self, client_address):
         try:
             del self._member_list[client_address]
         finally:
             return
 
+    @asyncio.coroutine
     def contiuously_scan_network(self):
         while True:
-            asyncio.sleep(self._scan_interval)
-            old_host_list = self._host_list.copy()
-            self._host_list = self._network_mapper.scan_network()
-            # TODO fertig machen
+            # yield from asyncio.sleep(self._scan_interval)
+            # asyncio.sleep(self._scan_interval)
+            new_host_list = self._network_mapper.scan_network()
+
+            for key in new_host_list.keys():
+                if key not in self._host_list:
+                    self._host_list[key] = new_host_list[key]
+                # logger.info(self._host_list[key])
+            yield  # from self
+
+    @asyncio.coroutine
+    def connect_to_nodes(self):
+        while True:
+            for ip, host in self._host_list.items():
+                if ip == ipaddress.ip_address('192.168.0.246'):
+                    xyz = 0
+
+                if ip not in self._member_list or self._member_list[ip].server_connection is None:
+                    #if not hasattr(self._host_list[ip].server_connection, 'test'):
+                    if not (
+                            type(self._host_list[ip].server_connection) is AsyncClient
+                            or hasattr(self._host_list[ip].server_connection, 'peer_name')
+                    ):
+                        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        sock.settimeout(0.05)
+                        port = self._port
+                        if sock.connect_ex((str(ip), port)) == 0:
+                            self._host_list[ip].server_connection = client = AsyncClient.AsyncClient(str(ip))
+                            yield from asyncio.async(client.connect())
+                        else:
+                            logger.debug('Cluster not running on {}'.format(self._host_list[ip]))
+            yield
+
+    @asyncio.coroutine
+    def elect_master(self):
+        # pass
+        while True:
+            yield from self._master_elector.elect_master()
 
     def get_own_ip(self):
         return ([l for l in (
@@ -114,6 +145,20 @@ class OECluster(object):
         pass
 
     host_list = property(_get_host_list, _set_host_list, doc='Get/set the list of eligible hosts')
+    
+    def _get_member_list(self):
+        """This property returns a list of members in the cluster
+        :return: _member_list
+        """
+        return self._member_list
+
+    def _set_member_list(self):
+        """This property set the list of members in the cluster
+        :return: device_list
+        """
+        pass
+
+    member_list = property(_get_member_list, _set_member_list, doc='Get/set the list of cluster members')
 
 
 if __name__ == "__main__":
@@ -121,12 +166,12 @@ if __name__ == "__main__":
 
     # TODO checken, ob das nicht besser in eine MAIN-Methode des Cluster soll?!
 
-    logger.info('eligible hosts')
+    #logger.info('eligible hosts')
 
-    for ip, host in cluster.host_list.items():
-        logger.info(host)
+    #for ip, host in cluster.host_list.items():
+    #    logger.info(host)
 
-    input('Enter your input:')
+    #input('Enter your input:')
 
     loop = cluster.loop
     AsyncServer.cluster = cluster
@@ -138,10 +183,14 @@ if __name__ == "__main__":
     logger.debug('Serving on {}'.format(server.sockets[0].getsockname()))
 
     AsyncClient.cluster = cluster
+    asyncio.async(cluster.contiuously_scan_network())
+    asyncio.async(cluster.connect_to_nodes())
+    asyncio.async(cluster.elect_master())
 
-    for ip, host in cluster.host_list.items():
-        client = AsyncClient.AsyncClient(str(ip))
-        asyncio.async(client.connect())
+
+    # for ip, host in cluster.host_list.items():
+    #    client = AsyncClient.AsyncClient(str(ip))
+    #    asyncio.async(client.connect())
 
     try:
         loop.run_forever()

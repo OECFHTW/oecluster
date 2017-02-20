@@ -9,6 +9,7 @@ FORMAT = '[%(asctime)-15s][%(levelname)s][%(name)s][%(module)s][%(funcName)s] %(
 logging.basicConfig(format=FORMAT)
 cluster = None
 
+
 class AsyncClient(object):
     def __init__(self, target='127.0.0.1',  message='JOIN'):
         self._loop = asyncio.get_event_loop()
@@ -27,7 +28,7 @@ class AsyncClient(object):
         try:
             logger.debug("Trying to  connect to %s" % self._target)
             #yield from
-            yield from asyncio.async(self._loop.create_connection(
+            asyncio.async(self._loop.create_connection(
                 lambda: ClusterClientProtocol(self._message, self._loop), self._target, self._port
             ))
 
@@ -68,5 +69,21 @@ class ClusterClientProtocol(asyncio.Protocol):
         self._loop.stop()
 
     def send(self, message):
+        logger.debug("sending message to {} : {}".format(self._peer_name[0], message))
         self._transport.write(message.encode())
 
+    # Properties
+
+    def _get_peer_name(self):
+        """This property returns a list of Hosts in the current network(-segment)
+        :return: _peer_name
+        """
+        return self._peer_name
+
+    def _set_peer_name(self):
+        """This property set the list of Hosts in the current network(-segment)
+        :return: device_list
+        """
+        pass
+
+    peer_name = property(_get_peer_name, _set_peer_name, doc='Get/set the address of connected node')
